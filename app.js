@@ -102,3 +102,75 @@ app.get("/users/:id", (req, res) =>{
     });
 });
 
+//Json request has id in it
+// app.post("/users", (req, res) =>{
+//     fs.readFile(__dirname + "/" + "users.json", "utf8", (err, data) =>{
+//         if(err) throw err;
+//         var users = JSON.parse(data);
+//         var user = req.body;
+//         users["user"+user.id] = user
+//         res.end( JSON.stringify(users));
+
+//         fs.writeFile(__dirname + "/" + "users.json", JSON.stringify(users, null, 2), (err) =>{
+//             if(err) throw err;
+//         });
+//     });
+
+// });
+
+//Post new user with generated id
+app.post("/users", (req, res) =>{
+    fs.readFile(__dirname + "/" + "users.json", "utf8", (err, data) =>{
+        if(err) throw err;
+        var users = JSON.parse(data);
+        var newUserData = req.body;
+
+        // Get the current max ID
+        const ids = Object.values(users).map(u => u.id || 0);
+        const newId = (Math.max(...ids, 0)) + 1;
+
+        //create new user
+        const newUser = {
+            ...newUserData,
+            id: newId
+        };
+
+        users["user"+ newId] = newUser
+        res.end( JSON.stringify(users));
+
+        fs.writeFile(__dirname + "/" + "users.json", JSON.stringify(users, null, 2), (err) =>{
+            if(err) throw err;
+        });
+    });
+
+});
+
+//Deleting an user
+app.delete("/users/:id", (req, res) =>{
+    fs.readFile(__dirname + "/" + "users.json", "utf8", (err, data) =>{
+        if(err) throw err;
+        var users = JSON.parse(data);
+        delete users["user" + req.params.id];
+        fs.writeFile(__dirname + "/users.json", JSON.stringify(users, null, 2), (err) => {
+            if (err) {
+                console.error("Error writing file:", err);
+                return res.status(500).send("Failed to delete user.");
+            }
+            res.status(200).send(`User with id ${req.params.id} deleted successfully.`);
+        });
+    });
+});
+
+//update user
+app.put("/users/:id", (req, res) =>{
+    fs.readFile(__dirname + "/" + "users.json", "utf8", (err, data) =>{
+        if(err) throw err;
+        var users = JSON.parse(data);
+        users["user" + req.params.id] =req.body
+        res.send(users);
+
+        fs.writeFile(__dirname + "/" + "users.json", JSON.stringify(users, null, 2), (err) =>{
+            if(err) throw err;
+        });
+    });
+});
